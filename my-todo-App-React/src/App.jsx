@@ -1,56 +1,84 @@
-import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import Task from './Task';
+import { useState, useRef } from 'react';
+import './Task.css';
 
 function App() {
-    const [item, setItem] = useState('');
-    const [task, setTask] = useState([]);
+    const [items, setItems] = useState([]);
+    const inputRef = useRef(null);
 
-    function handleSubmit(e) {
-        e.preventDefault();
-
-        setTask((currentTask) => {
-            return [
-                ...currentTask,
-                { id: Date.now(), title: item, completed: false },
-            ];
-        });
-
-        setItem('');
+    function handleSubmit(event) {
+        event.preventDefault();
+        const inputValue = inputRef.current.value.trim();
+        if (inputValue !== '') {
+            setItems((prevItems) => {
+                return [
+                    ...prevItems,
+                    {
+                        id: Date.now().toString(),
+                        text: inputRef.current.value,
+                        completed: false,
+                    },
+                ];
+            });
+        }
     }
 
-    function handleTaskCheck(taskId, isChecked) {
-        setTask((currentTask) => {
-            return currentTask.map((task) => {
-                if (task.id === taskId) {
-                    return { ...task, completed: isChecked };
+    function handleCheck(id) {
+        setItems((prevItems) =>
+            prevItems.map((item) => {
+                if (item.id === id) {
+                    return { ...item, completed: !item.completed };
+                } else {
+                    return item;
                 }
-                return task;
-            });
-        });
+            })
+        );
+    }
+
+    function handleDelete(index) {
+        setItems(items.filter((_, i) => i !== index));
     }
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="todo-app">
-                <label htmlFor="item">Add Task</label>
-                <input
-                    type="text"
-                    value={item}
-                    onChange={(event) => setItem(event.target.value)}
-                    id="item"
-                />
-                <button>
-                    <FontAwesomeIcon icon={faPlus} />
-                </button>
-            </form>
-            <h1>Todo List</h1>
-            <ul className="list">
-                {task.map((task) => (
-                    <Task key={task.id} task={task} onCheck={handleTaskCheck} />
-                ))}
-            </ul>
+            <div className="to-do-app">
+                <div className="to-do-header">
+                    <h1>ToDo App 📃</h1>
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="text"
+                            placeholder="Add Your Task"
+                            ref={inputRef}
+                        />
+                        <button type="submit">Add</button>
+                    </form>
+                    {items.length > 0 && (
+                        <ul>
+                            {items.map((item, index) => (
+                                <div className="task" key={item.id}>
+                                    <input
+                                        type="checkbox"
+                                        checked={item.completed}
+                                        onChange={() => handleCheck(item.id)}
+                                    />
+                                    <li
+                                        className={
+                                            item.completed ? 'line-through' : ''
+                                        }
+                                    >
+                                        {item.text}
+                                    </li>
+                                    <button
+                                        className="delete-btn"
+                                        onClick={() => handleDelete(index)}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            </div>
         </>
     );
 }
